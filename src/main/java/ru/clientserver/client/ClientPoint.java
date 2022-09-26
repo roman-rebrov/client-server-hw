@@ -8,50 +8,73 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ConnectException;
 import java.net.Socket;
+import java.util.NoSuchElementException;
 import java.util.Scanner;
 
 public class ClientPoint {
 
-    private static int port = Connect.port;
-
-
-    public static void main(String[] args) throws IOException {
-
-        Socket socket = null;
-
-        try {
-            socket = new Socket("127.0.0.1", port);
-        }catch (ConnectException exception){
-            System.err.println(exception.toString());
-        }
+    private static int port = Connect.PORT;
+    private static String host = Connect.HOST;
+    private static Scanner scan = new Scanner(System.in);
 
 
 
-        try(        PrintWriter out = new PrintWriter(socket.getOutputStream(),true);
-                    BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                    Scanner scan = new Scanner(System.in);
+    private static String request(String req)throws IOException{
+        try (
+                Socket socket = new Socket(host, port);
+                PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+                BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         ) {
+
+            out.println(req);
+
+            return in.readLine();
+
+        } catch (NullPointerException exception) {
+
+            exception.printStackTrace();
+
+        }
+        return "";
+    }
+
+
+
+    public static void main(String[] args)  {
+
+            String request = "";
 
             while (true) {
 
-                String str = scan.nextLine();
 
-                if (str.equals("--end")) break;
+                try {
 
-                out.println(str);
-                System.out.println("Server: " + in.readLine());
+                    String response = request(request);
+                    System.out.println("Server: " + response);
+
+                    String check = request(Connect.IS_DIALOG);
+                    if (!check.equals("Y")) {
+                        break;
+                    }
+
+                    System.out.print("You: ");
+                    request = scan.nextLine();
+
+                }catch (NoSuchElementException exception) {
+
+                    exception.printStackTrace();
+                    break;
+
+                } catch (ConnectException e){
+                    System.err.println(e.toString());
+                    break;
+                } catch (IOException e){
+                    System.err.println(e.toString());
+                    break;
+                }
 
             }
 
-        }catch(NullPointerException exception){
-
-            System.err.println(exception.toString());
-
-        }catch(IOException ex){
-
-            System.err.println(ex.toString());
-
-        }
 
     }
 }

@@ -11,25 +11,52 @@ import java.net.Socket;
 
 public class ServerPoint {
 
-    private static int port = Connect.port;
+    private static int port = Connect.PORT;
+    private static ServerSocket serverSocket;
+    private static Socket clientSocket;
+
 
     public static void main(String[] args) throws IOException {
 
-        ServerSocket serverSocket = new ServerSocket(port);
-        Socket clientSocket = serverSocket.accept();
+        try {
+            serverSocket = new ServerSocket(port);
+            PrintWriter out = null;
+            BufferedReader in = null;
 
-        PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
-        BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+            DialogBuilder dialog = new DialogBuilderImpl();
+
+            while (true) {
+
+                try {
+
+                    clientSocket = serverSocket.accept();
+                    out = new PrintWriter(clientSocket.getOutputStream(), true);
+                    in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+
+                    System.out.println("New connection accepted");
 
 
-        System.out.println("New connection accepted");
+                    final String request = in.readLine();
+                    String response = dialog.append(request);
 
-        final String name = in.readLine();
+                    out.println(response);
 
-        out.println(String.format("Hi %s, your port is %d", name, clientSocket.getPort()));
+                    System.out.println(request);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } finally {
+                    in.close();
+                    out.close();
+                }
 
-        System.out.println(name);
+            }
 
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        } finally {
+            serverSocket.close();
+            clientSocket.close();
+        }
 
 
     }
